@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ID Photo Studio
 
-## Getting Started
+Batch-process photos for ID cards in the browser. For each photo it:
 
-First, run the development server:
+1. Finds the face, centres it and levels a tilted head
+2. Crops to a print size (default 4.5 × 5 in at 300 dpi, giving 1350 × 1500 px)
+3. Makes a circle PNG with transparent corners
+4. Enhances brightness, contrast, colour and sharpness
+
+Save one photo at a time or everything as a ZIP. Photos never leave the browser.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Production build:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How it's put together
 
-## Learn More
+| Path | What it does |
+| --- | --- |
+| `src/components/Studio.tsx` | Page state: the photo queue, face finding, saving |
+| `src/components/PhotoCard.tsx` | One proof: preview, drag to nudge, zoom, save |
+| `src/components/SettingsPanel.tsx` | Print size, framing, output and enhance settings |
+| `src/lib/settings.ts` | Settings, saved to `localStorage` |
+| `src/lib/faceFinder.ts` | Loads face-api and finds eyes and chin |
+| `src/lib/geometry.ts` | Places the head in the frame |
+| `src/lib/enhance.ts` | Auto levels, face-based gamma, saturation, unsharp mask |
+| `src/lib/images.ts` | Decoding, full-size render, JPG and PNG output |
+| `src/lib/printDpi.ts` | Writes the dpi into JPG (JFIF) and PNG (pHYs) files |
+| `public/models/` | Face detection (SSD MobileNet v1) and 68-point landmark weights |
 
-To learn more about Next.js, take a look at the following resources:
+Framing: the head (crown to chin) fills the **Head height** share of the photo, with **Space above head** above the crown. The crown is estimated from the eye-to-chin distance, since the eyes sit near the middle of the head.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Chrome can't decode HEIC, so convert iPhone photos to JPG first or use Safari.
